@@ -44,6 +44,7 @@ async function filterUsers(req, res) {
         await Friendship.create({ sender: req.body.senderId, receiver: req.body.receiverId })
         const user = await User.findById(req.body.senderId)
         const users = await findUninteractedUsers(req, user)
+        console.log(users)
         res.status(200).json(users)
     } catch (err) {
         res.status(400).json(err)
@@ -54,10 +55,10 @@ async function updateRequests(req, res) {
     try {
         const request = await Friendship.findOne({ receiver: req.body.user, sender: req.body.friend })
         request.confirmed = true
-        request.save()
+        await request.save()
         let requests = await Friendship.find({ receiver: req.body.user, confirmed: false })
         requests = requests.map(request => request.sender)
-        const requesters = await User.find({ _id: { $nin: [requests, req.body.user].flat(Infinity) } })
+        const requesters = await User.find({ _id: { $in: requests } })
         res.status(200).json(requesters)
     } catch (err) {
         res.status(400).json(err)
